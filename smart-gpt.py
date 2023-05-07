@@ -24,17 +24,30 @@ def generate_response(prompt: str, model: str = "gpt-4") -> str:
 
 
 def chain_of_thought_prompting(question: str) -> str:
-    prompt = f"Let's work this out in a step-by-step way to make sure we have the right answer. Question: {question}"
+    prompt = f"Answer: Let's work this out in a step-by-step way to make sure we have the right answer. Question: {question}"
     response = generate_response(prompt)
     print("Thinking step by step...")
+    print("Initial response: ", response)
     return response
 
 
-def reflection_and_dialogue(question: str, response: str) -> str:
-    reflection_prompt = f"I answered the question '{question}' with the response '{response}'. Is this response correct? If not, what is the correct answer?"
-    reflection_response = generate_response(reflection_prompt)
-    print("Reflecting and dialoguing...")
-    return reflection_response
+def reflection_and_dialogue(question: str, response: str, max_rounds: int = 3) -> str:
+    current_round = 1
+    while current_round <= max_rounds:
+        print(f"Round {current_round}: Reflecting and dialoguing...")
+        reflection_prompt = f"I answered the question '{question}' with the response '{response}'. Is this response correct? If yes, reply exactly 'Yes, this response is correct'. If not, what is the correct answer?"
+        reflection_response = generate_response(reflection_prompt)
+
+        print(
+            "Reflection response round {current_roud}/{max_rounds}: ", reflection_response)
+
+        if "yes, this response is correct" in reflection_response.lower():
+            break
+        else:
+            response = reflection_response
+            current_round += 1
+
+    return response
 
 
 def smart_gpt(question: str) -> str:
