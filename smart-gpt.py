@@ -1,7 +1,6 @@
 from dotenv import load_dotenv
 import os
 import openai
-from typing import List, Set
 
 load_dotenv()
 
@@ -24,22 +23,12 @@ def generate_response(prompt: str) -> str:
     return response.choices[0].message['content'].strip()
 
 
-def chain_of_thought_prompting(question: str) -> str:
-    prompt = f"Answer: Let's work this out in a step-by-step way to make sure we have the right answer. Question: {question}"
+def chain_of_thought_prompting(original_prompt) -> str:
+    prompt = f"Let's work this out in a step-by-step way to make sure we have the right answer. ]n{original_prompt}"
     response = generate_response(prompt)
     print("Thinking step by step...")
-    print("Initial response: ", response)
+    print("Response: ", response)
     return response
-
-
-def jaccard_similarity(set1: Set[str], set2: Set[str]) -> float:
-    intersection = set1.intersection(set2)
-    union = set1.union(set2)
-    return len(intersection) / len(union)
-
-
-def tokenize_text(text: str) -> Set[str]:
-    return set(text.lower().split())
 
 
 def is_response_correct(reflection_response: str) -> bool:
@@ -51,35 +40,40 @@ def is_response_correct(reflection_response: str) -> bool:
     return False
 
 
-def reflection_and_dialogue(question: str, response: str, max_rounds: int = 3, similarity_threshold: float = 0.7) -> str:
+def reflection_and_dialogue(question: str, response: str, min_rounds: int = 2, max_rounds: int = 3) -> str:
     current_round = 1
-    previous_responses = []
+    correct_rounds = 0
+    messages = [{"role": "system", "content": "You are a helpful assistant that provides accurate answers through self-dialogue and reflection."}]
+    messages.append({"role": "user", "content": question})
+    messages.append({"role": "assistant", "content": response})
 
     while current_round <= max_rounds:
-        reflection_prompt = f"The following question was asked '{question}'\n The response was '{response}'\n Is this response correct? If not, what is the correct answer?"
-        reflection_response = generate_response(reflection_prompt)
+        prompt = f"Is the answer '{response}' correct? If not, what is the correct answer?"
+        messages.append(
+            {"role": "user", "content": chain_of_thought_prompting(prompt)})
+        generated_response = openai.ChatCompletion.create(
+            model=gpt_model,
+            messages=messages,
+            max_tokens=150,
+            n=1,
+            stop=None,
+            temperature=0.5,
+        )
 
-        print(
-            f"Round {current_round}/{max_rounds} reflection and dialogue: ", reflection_response)
+        response_text = generated_response.choices[0].message['content'].strip(
+        )
+        messages.append({"role": "assistant", "content": response_text})
 
-        if is_response_correct(reflection_response):
-            break
+        if is_response_correct(response_text):
+            correct_rounds += 1
+            if correct_rounds >= min_rounds:
+                break
+        else:
+            correct_rounds = 0
 
-        for prev_response in previous_responses:
-            prev_tokens = tokenize_text(prev_response)
-            curr_tokens = tokenize_text(reflection_response)
-            similarity = jaccard_similarity(prev_tokens, curr_tokens)
-
-            if similarity >= similarity_threshold:
-                print(
-                    "Detected looping or non-improving response. Terminating the reflection and dialogue loop.")
-                return response
-
-        previous_responses.append(reflection_response)
-        response = reflection_response
         current_round += 1
 
-    return response
+    return response_text
 
 
 def smart_gpt(question: str) -> str:
@@ -89,26 +83,34 @@ def smart_gpt(question: str) -> str:
     return final_response
 
 
+# test_question = """
+# Construct a complete truth table for the following pairs of propositions. Then, using the truth tables, determine whether the statements are logically equivalent or contradictory. If neither, determine whether they are consistent or inconsistent. Justify your answers.
+# ~(J ∨ K) · L and (L ⊃ J) · K"
+# A. Logically equivalent
+# B. Contradictory
+# C. Neither logically equivalent nor contradictory, but consistent
+# D. Inconsistent
+# """
+
 test_question = """
- Which of the following propositions is an immediate (one-step) consequence in PL of the given premises?
+Which of the following propositions is an immediate (one-step) consequence in PL of the given premises?
 ~E ⊃ ~F
 G ⊃ F
 H ∨ ~E
 H ⊃ I
 ~I
 
-Options: 
+Options:
 A. E ⊃ F
 B. F ⊃ G
 C. H ⊃ ~E
 D. ~H
-
 """
 
 
 def main():
-    # question = test_question
-    question = input("What is your question?\n")
+    # question = input("What is your question?\n")
+    question = test_question
     response = smart_gpt(question)
     print(f"\n\nSmart GPT Response: \n{response}")
 
