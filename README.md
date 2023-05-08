@@ -1,6 +1,6 @@
 ## SmartGPT
 
-This repo is an WIP effort to increase the accuracy of GPT-4 using chain-of-thought reasoning and reflection.
+This repo is a WIP effort to increase the accuracy of GPT-4 using chain-of-thought reasoning and reflection.
 
 The motivation for this project comes from [this YouTube video by AI Explained](https://www.youtube.com/watch?v=wVzuvf9D9BU).
 
