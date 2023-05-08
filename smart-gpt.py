@@ -36,13 +36,15 @@ def reflection_and_dialogue(question: str, response: str, max_rounds: int = 3) -
     current_round = 1
     while current_round <= max_rounds:
 
-        reflection_prompt = f"I answered the question '{question}' with the response '{response}'. Is this response correct? If yes, reply exactly 'Yes, this response is correct'. If not, what is the correct answer?"
+        reflection_prompt = f"I answered the question '{question}' with the response '{response}'. Is this response correct? If not, what is the correct answer?"
         reflection_response = generate_response(reflection_prompt)
 
         print(
             f"Round {current_round}/{max_rounds} reflextion and dialogue: ", reflection_response)
 
-        if "yes, this response is correct" in reflection_response.lower():
+        # Check that the phrase "response is correct" is in the response
+        # TODO: This is a very simple/brittle check. We should use a more robust method
+        if "response is correct" in reflection_response.lower():
             break
         else:
             response = reflection_response
