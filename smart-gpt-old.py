@@ -8,7 +8,7 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 gpt_model = os.getenv("GPT_MODEL")
 
 
-def generate_response(prompt: str) -> str:
+def generate_response(prompt: str, temperature=0.5) -> str:
     response = openai.ChatCompletion.create(
         model=gpt_model,
         messages=[{
@@ -17,16 +17,15 @@ def generate_response(prompt: str) -> str:
         max_tokens=500,
         n=1,
         stop=None,
-        temperature=0.5,
+        temperature=temperature,
     )
 
     return response.choices[0].message['content'].strip()
 
 
-def chain_of_thought_prompting(original_prompt) -> str:
+def generate(original_prompt) -> str:
     prompt = f"Let's work this out in a step-by-step way to make sure we have the right answer. ]n{original_prompt}"
     response = generate_response(prompt)
-    print("Thinking step by step...")
     print("Response: ", response)
     return response
 
