@@ -18,7 +18,7 @@ The motivation for this project comes from [this YouTube video by AI Explained](
 
 5. The feedback from the "reflection and dialogue" phase is paired with the initial responses. For each pair, a new API call is made asking the agent to use the feedback and correct the answer.
 
-6. Finally, all corrected responses are sent back to the GPT-4 API in the "resolver" phase. The AI is tasked with choosing the most accurate response. The prompt for this call might look like, "Given these corrected responses, select the most accurate answer. Question: {question} Responses: {corrected_responses}"
+6. Finally, all corrected responses are sent back to the GPT-4 API in the "resolver" phase. The AI is tasked with choosing the most accurate response. The prompt for this call is "Given these corrected responses, select the most accurate answer. Question: {question} Responses: {corrected_responses}"
 
 ## Requirements
 
